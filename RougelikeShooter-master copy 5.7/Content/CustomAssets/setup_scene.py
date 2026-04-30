@@ -13,9 +13,7 @@ What it does:
 import unreal
 
 al   = unreal.EditorAssetLibrary
-asl  = unreal.AssetSystemLibrary
 eul  = unreal.EditorLevelLibrary
-atl  = unreal.EditorActorUtilities
 
 
 # ── 1. Import textures ────────────────────────────────────────────────────────
@@ -183,11 +181,11 @@ for bp_path, mat_asset, label in [
     if not bp or not mat_asset:
         print(f"  skip {label} (asset missing)")
         continue
-    # Find SkeletalMeshComponent / StaticMeshComponent and override material 0
-    comps = unreal.BlueprintEditorLibrary.get_components_of_class(
-        bp, unreal.MeshComponent)
+    cdo = unreal.get_default_object(bp.generated_class())
+    comps = cdo.get_components_by_class(unreal.SkeletalMeshComponent)
     if not comps:
-        # fallback: try CapsuleComponent owner — set on the generated class CDO
+        comps = cdo.get_components_by_class(unreal.StaticMeshComponent)
+    if not comps:
         print(f"  {label}: no MeshComponent found in blueprint, set manually")
         continue
     for comp in comps:
@@ -200,42 +198,48 @@ for bp_path, mat_asset, label in [
 
 print("[setup] Setting up dark indoor lighting...")
 
-actors = eul.get_all_level_actors()
+eas = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
+actors = eas.get_all_level_actors()
 for actor in actors:
     cls_name = actor.get_class().get_name()
 
-    # Kill sky atmosphere + sky light outdoor influence
+    # Hide sky/atmosphere
     if cls_name in ("SkyAtmosphere", "BP_Sky_Sphere_C"):
         actor.set_actor_hidden_in_game(True)
-        eul.set_actor_selection_state(actor, True, False)
-        print(f"  hidden: {cls_name}")
+        actor.set_is_temporarily_hidden_in_editor(True)
+        print(f"  disabled: {cls_name}")
 
-    # Dim directional sun light heavily
+    # Purple directional light — uniform, no falloff, no shadows
     if cls_name == "DirectionalLight":
         comp = actor.get_component_by_class(unreal.DirectionalLightComponent)
         if comp:
-            comp.set_intensity(0.15)
-            comp.set_light_color(unreal.LinearColor(0.05, 0.05, 0.1, 1.0))
-        print("  DirectionalLight dimmed")
+            comp.set_intensity(2.0)
+            comp.set_light_color(unreal.LinearColor(0.75, 0.55, 1.0, 1.0))
+            comp.set_cast_shadows(False)
+        print("  DirectionalLight set to purple")
 
-    # Sky light — very dark ambient
+    # Purple sky light — fills all surfaces uniformly, no shadows
     if cls_name == "SkyLight":
+        actor.set_actor_hidden_in_game(False)
+        actor.set_is_temporarily_hidden_in_editor(False)
         comp = actor.get_component_by_class(unreal.SkyLightComponent)
         if comp:
-            comp.set_intensity(0.05)
-        print("  SkyLight dimmed")
+            comp.set_intensity(1.0)
+            comp.set_light_color(unreal.LinearColor(0.75, 0.55, 1.0, 1.0))
+            comp.set_cast_shadows(False)
+        print("  SkyLight set to purple")
 
-# Add a dim fill point light in the center if none exist
-point_lights = [a for a in actors if a.get_class().get_name() == "PointLight"]
-if len(point_lights) < 2:
-    loc = unreal.Vector(0, 0, 400)
-    pl = eul.spawn_actor_from_class(unreal.PointLight, loc)
-    lc = pl.get_component_by_class(unreal.PointLightComponent)
-    if lc:
-        lc.set_intensity(800)
-        lc.set_attenuation_radius(3000)
-        lc.set_light_color(unreal.LinearColor(0.6, 0.5, 1.0, 1.0))
-    print("  Added indoor ambient point light (purple tint)")
+    # Remove shadows from any existing point lights
+    if cls_name == "PointLight":
+        comp = actor.get_component_by_class(unreal.PointLightComponent)
+        if comp:
+            comp.set_cast_shadows(False)
+
+# Remove all previously spawned setup lights
+for a in eas.get_all_level_actors():
+    if a.get_actor_label().startswith("setup_light"):
+        eas.destroy_actor(a)
+print("  Lighting setup complete")
 
 eul.save_current_level()
 print("[setup] Done! Check your scene.")
