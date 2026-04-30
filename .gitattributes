@@ -1,0 +1,43 @@
+# Normalize line endings for text files
+* text=auto eol=lf
+
+# UE binary files - never apply text/CRLF processing
+*.uasset binary lockable
+*.umap binary lockable
+*.uproject binary
+*.ubulk binary
+*.uexp binary
+*.uptnl binary
+*.ushaderbytecode binary
+*.upk binary
+*.udk binary
+
+# Source assets
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.tga binary
+*.psd binary
+*.bmp binary
+*.ico binary
+*.tif binary
+*.tiff binary
+*.hdr binary
+
+*.wav binary
+*.ogg binary
+*.mp3 binary
+*.aiff binary
+*.flac binary
+
+*.mp4 binary
+*.avi binary
+*.mov binary
+
+*.fbx binary
+*.obj binary
+*.dae binary
+
+*.zip binary
+*.rar binary
+*.7z binary
