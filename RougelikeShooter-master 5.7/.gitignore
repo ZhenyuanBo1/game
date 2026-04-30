@@ -1,0 +1,56 @@
+# Unreal Engine .gitignore
+
+# Build results
+Binaries/
+Build/
+DerivedDataCache/
+Intermediate/
+Saved/
+
+# Visual Studio / IDE
+.vs/
+*.VC.db
+*.VC.opendb
+*.sln
+*.suo
+*.opensdf
+*.sdf
+*.user
+*.userprefs
+*.vcxproj*
+*.csproj*
+*.unityproj
+*.pidb
+*.booproj
+*.svd
+
+# Mac
+.DS_Store
+
+# Linux
+*.swp
+
+# Logs
+*.log
+
+# Compiled source
+*.o
+*.obj
+*.dll
+*.exe
+*.app
+*.ipa
+
+# Unreal specific
+*.pdb
+*.exp
+
+# Rider / VSCode
+.idea/
+.vscode/
+
+# Optional: Ignore Derived Data Cache shared location
+DerivedDataCache/
+
+# Ignore packaged builds
+*.pak
